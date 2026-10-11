@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Clock, MapPin, ShieldCheck } from 'lucide-react';
@@ -7,7 +8,19 @@ import { duration, money } from '../lib/format';
 import type { PublicProfessional, PublicService } from '../lib/types';
 import { Avatar, Skeleton } from '../components/ui';
 
+const GALLERY = [
+  { src: '/img/gallery/1.jpg', title: 'Degradé con peine' },
+  { src: '/img/gallery/2.jpg', title: 'Afeitado clásico a navaja' },
+  { src: '/img/gallery/3.jpg', title: 'Perfilado de barba' },
+  { src: '/img/gallery/4.jpg', title: 'Espuma y navaja' },
+  { src: '/img/gallery/5.jpg', title: 'Arreglo de barba' },
+  { src: '/img/gallery/6.jpg', title: 'Nuestras herramientas' },
+  { src: '/img/gallery/7.jpg', title: 'El sillón' },
+  { src: '/img/gallery/8.jpg', title: 'Corte a tijera' },
+];
+
 export default function Home() {
+  const [zoom, setZoom] = useState<(typeof GALLERY)[number] | null>(null);
   const { business } = useBusiness();
   const services = useQuery({ queryKey: ['services'], queryFn: () => api.get<PublicService[]>('/public/services') });
   const pros = useQuery({ queryKey: ['professionals'], queryFn: () => api.get<PublicProfessional[]>('/public/professionals') });
@@ -50,6 +63,20 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="section" id="trabajos">
+        <div className="container">
+          <h2 className="display">Nuestros trabajos</h2>
+          <div className="gallery">
+            {GALLERY.map((g) => (
+              <button key={g.src} className="shot" onClick={() => setZoom(g)} aria-label={`Ver foto: ${g.title}`}>
+                <img src={g.src} alt={g.title} loading="lazy" width={400} height={400} />
+                <span>{g.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="section">
         <div className="container">
           <h2 className="display">{business?.professionalPlural ?? 'Equipo'}</h2>
@@ -57,7 +84,7 @@ export default function Home() {
             {pros.isLoading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} h={96} r={20} />)}
             {pros.data?.map((p) => (
               <div key={p.id} className="card team-card">
-                <Avatar name={p.name} color={p.color} photoUrl={p.photoUrl} size="lg" />
+                <Avatar name={p.name} color={p.color} photoUrl={p.photoUrl} size="xl" />
                 <div>
                   <div style={{ fontWeight: 800, fontSize: 17 }}>{p.name}</div>
                   <p className="muted small" style={{ marginTop: 4 }}>
@@ -104,6 +131,14 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {zoom && (
+        <div className="overlay" onClick={() => setZoom(null)}>
+          <div className="lightbox" role="dialog" aria-label={zoom.title}>
+            <img src={zoom.src} alt={zoom.title} />
+            <p>{zoom.title}</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

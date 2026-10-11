@@ -44,7 +44,7 @@ export function PublicLayout() {
           <div>{[business?.address, business?.phone].filter(Boolean).join(' · ')}</div>
           <div className="small">{business?.cancellationPolicy}</div>
           <div className="tiny" style={{ marginTop: 10 }}>
-            Sistema de turnos online · <a href="/api/docs" target="_blank" rel="noreferrer">API documentada (Swagger)</a>
+            Sistema de turnos online · <a href="/api/docs" target="_blank" rel="noreferrer">API documentada (Swagger)</a> · Fotos: <a href="https://unsplash.com" target="_blank" rel="noreferrer">Unsplash</a>
           </div>
         </div>
       </footer>

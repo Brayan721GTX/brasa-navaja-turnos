@@ -147,4 +147,4 @@ Desde **Configuración → Adaptá el sistema a tu rubro** se aplica una plantil
 
 ---
 
-Hecho como pieza de portfolio.
+Fotos: [Unsplash](https://unsplash.com) (licencia Unsplash, uso libre, sin marcas reales). Hecho como pieza de portfolio.

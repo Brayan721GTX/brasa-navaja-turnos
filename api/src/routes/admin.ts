@@ -261,7 +261,12 @@ adminRouter.get(
 const proBody = z.object({
   name: z.string().trim().min(2).max(80),
   bio: z.string().trim().max(240).nullish(),
-  photoUrl: z.string().url().max(500).nullish().or(z.literal('').transform(() => null)),
+  photoUrl: z
+    .string()
+    .max(500)
+    .refine((v) => v === '' || /^https?:\/\//.test(v) || v.startsWith('/'), 'Usá una URL válida')
+    .transform((v) => v || null)
+    .nullish(),
   color: hexColor.default('#C8895A'),
   position: z.number().int().min(0).default(0),
   active: z.boolean().default(true),

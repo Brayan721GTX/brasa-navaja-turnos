@@ -51,9 +51,10 @@ const SERVICES = [
   { key: 'facial', name: 'Limpieza facial express', description: 'Exfoliación, vapor y mascarilla negra.', durationMin: 30, price: 7500, category: 'Cuidado', pros: ['joaco', 'lucas'] as Pro[] },
 ];
 
-const PROS: { key: Pro; name: string; bio: string; color: string; position: number; hours: Record<number, [number, number][]> }[] = [
+const PROS: { key: Pro; photoUrl: string; name: string; bio: string; color: string; position: number; hours: Record<number, [number, number][]> }[] = [
   {
     key: 'teo',
+    photoUrl: '/img/team/teo.jpg',
     name: 'Teo Ledesma',
     bio: 'Especialista en degradés y cortes modernos. 9 años detrás del sillón.',
     color: '#C8895A',
@@ -62,6 +63,7 @@ const PROS: { key: Pro; name: string; bio: string; color: string; position: numb
   },
   {
     key: 'lucas',
+    photoUrl: '/img/team/lucas.jpg',
     name: 'Lucas Ferrero',
     bio: 'Colorista y barbero. Platinados, mechas y barbas de revista.',
     color: '#8FA3B8',
@@ -70,6 +72,7 @@ const PROS: { key: Pro; name: string; bio: string; color: string; position: numb
   },
   {
     key: 'joaco',
+    photoUrl: '/img/team/joaco.jpg',
     name: 'Joaquín Ibarra',
     bio: 'Barbería clásica: navaja, toalla caliente y mucho oficio.',
     color: '#A8B98A',
@@ -140,6 +143,7 @@ export async function resetDemoData(prisma: PrismaClient, now = new Date()): Pro
       data: {
         name: p.name,
         bio: p.bio,
+        photoUrl: p.photoUrl,
         color: p.color,
         position: p.position,
         services: { create: SERVICES.filter((s) => s.pros.includes(p.key)).map((s) => ({ serviceId: services[s.key] })) },

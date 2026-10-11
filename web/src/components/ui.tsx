@@ -100,7 +100,7 @@ export function ErrorBox({ error, onRetry }: { error: unknown; onRetry?: () => v
   );
 }
 
-export function Avatar({ name, color, photoUrl, size }: { name: string; color: string; photoUrl?: string | null; size?: 'sm' | 'lg' }) {
+export function Avatar({ name, color, photoUrl, size }: { name: string; color: string; photoUrl?: string | null; size?: 'sm' | 'lg' | 'xl' }) {
   return (
     <span className={`avatar ${size ?? ''}`} style={{ background: color }}>
       {photoUrl ? <img src={photoUrl} alt="" /> : name.trim().charAt(0).toUpperCase()}

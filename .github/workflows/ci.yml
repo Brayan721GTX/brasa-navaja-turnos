@@ -15,6 +15,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npx prisma generate
+        working-directory: api
       - run: npm run typecheck -w api
       - run: npm test -w api
       - run: npm run build -w web

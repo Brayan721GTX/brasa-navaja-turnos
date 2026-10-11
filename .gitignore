@@ -8,3 +8,4 @@ dist
 .netlify
 coverage
 .localdb
+scripts/site.zip

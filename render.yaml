@@ -1,0 +1,31 @@
+# Blueprint de Render (plan gratis). La base NO está acá: usamos Neon (Render Postgres gratis se borra a los 30 días).
+services:
+  - type: web
+    name: brasa-navaja-api
+    runtime: node
+    plan: free
+    region: ohio
+    rootDir: api
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm run start:render
+    healthCheckPath: /api/v1/public/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: DATABASE_URL        # Neon, cadena "pooled" (host con -pooler)
+        sync: false
+      - key: DIRECT_URL          # Neon, cadena directa (sin -pooler), solo para migraciones
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CRON_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS        # URL del frontend en Netlify
+        sync: false
+      - key: WEB_URL
+        sync: false

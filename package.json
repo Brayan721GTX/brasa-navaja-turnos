@@ -1,0 +1,20 @@
+{
+  "name": "brasa-navaja-turnos",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sistema de turnos online multi-rubro (demo de portfolio: Brasa & Navaja)",
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w api",
+    "dev:web": "npm run dev -w web",
+    "build": "npm run build -w api && npm run build -w web",
+    "test": "npm test -w api",
+    "screenshots": "node scripts/screenshots.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.13.0"
+  }
+}

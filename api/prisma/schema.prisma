@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  PROFESSIONAL
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum AppointmentSource {
+  ONLINE
+  ADMIN
+}
+
+/// Configuración del negocio (una sola fila, id = 1). Es lo que permite adaptar el sistema a otros rubros.
+model Business {
+  id                  Int     @id @default(1)
+  name                String
+  tagline             String
+  industry            String
+  logoUrl             String?
+  accentColor         String  @default("#C8895A")
+  baseColor           String  @default("#0F0E0D")
+  heroTitle           String
+  heroSubtitle        String
+  bookingIntro        String
+  cancellationPolicy  String
+  cancellationHours   Int     @default(4)
+  professionalLabel   String  @default("Barbero")
+  professionalPlural  String  @default("Barberos")
+  whatsappNumber      String?
+  phone               String?
+  email               String?
+  address             String?
+  instagram           String?
+  timezone            String  @default("America/Argentina/Buenos_Aires")
+  slotStepMinutes     Int     @default(15)
+  minNoticeMinutes    Int     @default(60)
+  maxDaysAhead        Int     @default(30)
+  updatedAt           DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  passwordHash   String
+  role           Role
+  /// Cuentas de demostración: nadie puede borrarlas ni cambiarles datos/clave
+  isDemo         Boolean   @default(false)
+  active         Boolean   @default(true)
+  professionalId String?   @unique
+  professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+  refreshTokens  RefreshToken[]
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId])
+}
+
+model Professional {
+  id        String   @id @default(cuid())
+  name      String
+  bio       String?
+  photoUrl  String?
+  color     String   @default("#C8895A")
+  position  Int      @default(0)
+  active    Boolean  @default(true)
+  user      User?
+  services  ProfessionalService[]
+  hours     WorkingHours[]
+  blocks    TimeBlock[]
+  appointments Appointment[]
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  durationMin Int
+  /// Precio en pesos argentinos (entero)
+  price       Int
+  category    String?
+  position    Int      @default(0)
+  active      Boolean  @default(true)
+  professionals ProfessionalService[]
+  appointments  Appointment[]
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model ProfessionalService {
+  professionalId String
+  serviceId      String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  service        Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, serviceId])
+}
+
+/// Franjas de trabajo semanales. Varias por día permiten turno cortado (ej. 9-13 y 15-20).
+model WorkingHours {
+  id             String       @id @default(cuid())
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  /// 0 = domingo ... 6 = sábado
+  weekday        Int
+  startMinute    Int
+  endMinute      Int
+
+  @@index([professionalId, weekday])
+}
+
+model Holiday {
+  id   String @id @default(cuid())
+  /// Fecha local del negocio, formato YYYY-MM-DD
+  date String @unique
+  name String
+}
+
+/// Bloqueos: vacaciones, almuerzo, trámites. professionalId null = todo el negocio.
+model TimeBlock {
+  id             String        @id @default(cuid())
+  professionalId String?
+  professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  startsAt       DateTime      @db.Timestamptz(3)
+  endsAt         DateTime      @db.Timestamptz(3)
+  reason         String?
+
+  @@index([startsAt, endsAt])
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String
+  email        String?  @unique
+  notes        String?
+  appointments Appointment[]
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([phone])
+}
+
+/// Importante: la restricción anti-solapamiento (EXCLUDE USING gist) vive en la migración SQL,
+/// porque Prisma no puede modelarla. Es la garantía real contra turnos duplicados.
+model Appointment {
+  id             String            @id @default(cuid())
+  /// Token secreto del link público para ver / cancelar / reprogramar
+  manageToken    String            @unique
+  professionalId String
+  professional   Professional      @relation(fields: [professionalId], references: [id])
+  serviceId      String
+  service        Service           @relation(fields: [serviceId], references: [id])
+  customerId     String
+  customer       Customer          @relation(fields: [customerId], references: [id])
+  startsAt       DateTime          @db.Timestamptz(3)
+  endsAt         DateTime          @db.Timestamptz(3)
+  status         AppointmentStatus @default(CONFIRMED)
+  source         AppointmentSource @default(ONLINE)
+  /// Precio y duración "congelados" al reservar
+  price          Int
+  notes          String?
+  cancelledAt    DateTime?         @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @db.Timestamptz(3)
+
+  @@index([professionalId, startsAt])
+  @@index([startsAt])
+  @@index([customerId])
+}
+
+/// Bandeja de salida: en modo demo los emails no se envían, se guardan acá y se muestran en pantalla.
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  html      String
+  sent      Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model SystemState {
+  key   String @id
+  value String
+}
